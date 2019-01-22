@@ -1,0 +1,46 @@
+pipeline {
+  agent any
+    
+  tools {nodejs "node"}
+    
+  stages {
+        
+    stage('Cloning Git') {
+      steps {
+         git credentialsId: 'github',
+         
+		    url: 'https://github.com/singuvenkatesh/microservices-node-example-todo-frontend.git',
+			branch:'master'
+      }
+    }
+        
+    stage('Install dependencies') {
+      steps {
+        sh 'npm install'
+        
+      }
+    }
+    
+     stage('serverless configuration') {
+      steps {
+        withCredentials([string(credentialsId: 'aws_key', variable: 'aws_key'), string(credentialsId: 'aws_secret', variable: 'aws_secret')]) {
+      sh 'serverless config credentials --provider aws --key ${aws_key} --secret ${aws_secret} -o'
+       }
+        
+      }
+    }
+    
+    stage('serverless deploy') {
+      steps {
+        sh 'sls deploy'
+        
+      }
+    }
+     
+    stage('Test') {
+      steps {
+         sh 'npm test'
+      }
+    }      
+  }
+}
